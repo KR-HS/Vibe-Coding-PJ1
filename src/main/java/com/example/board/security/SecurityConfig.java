@@ -26,7 +26,8 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private static final String[] PERMIT_ALL_PATHS = {
-            "/", "/error", "/api/auth/**", "/oauth2/**", "/login/**"
+            "/", "/index.html", "/auth/**", "/css/**", "/js/**",
+            "/error", "/api/auth/**", "/oauth2/**", "/login/**"
     };
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -53,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(PERMIT_ALL_PATHS).permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/auth/login.html")
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler))
                 .addFilterBefore(
