@@ -70,10 +70,14 @@ docs/
 │   ├── 001-board-crud.md
 │   ├── 002-comment.md
 │   └── ...
-└── work-log/       # 실제 작업 기록
-    ├── 2026-08.md
+└── work-log/       # 실제 작업 기록 (Plan과 동일한 번호/이름으로 1:1 대응)
+    ├── 001-board-crud.md
+    ├── 002-comment.md
     └── ...
 ```
+
+- Work Log 파일명은 대응하는 Plan 파일명과 동일하게 맞춘다(예: `plans/001-auth.md` ↔ `work-log/001-auth.md`).
+- 한 Work Log 파일 안에서는 날짜별로 섹션(`## YYYY-MM-DD`)을 나누어 해당 기능에 대한 작업 이력을 누적 기록한다.
 
 ## Plan
 Plan은 **무엇을 어떻게 구현할 것인가**를 정의한다.
