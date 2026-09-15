@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시판 - 게시판</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <a class="logo" href="/">게시판</a>
+        <nav class="nav-links" id="nav-links"></nav>
+    </header>
+
+    <main class="board-main">
+        <div class="board-toolbar">
+            <form id="search-form" class="search-form">
+                <select id="category-select" name="category">
+                    <option value="">전체 카테고리</option>
+                    <option value="FREE">자유</option>
+                    <option value="NOTICE">공지</option>
+                    <option value="QNA">질문</option>
+                </select>
+                <input type="text" id="keyword-input" name="keyword" placeholder="제목/내용 검색">
+                <button type="submit" class="btn btn-secondary search-btn">검색</button>
+            </form>
+            <a class="btn write-btn" id="write-link" href="/board/write.html">글쓰기</a>
+        </div>
+
+        <table class="board-table">
+            <thead>
+                <tr>
+                    <th class="col-category">카테고리</th>
+                    <th class="col-title">제목</th>
+                    <th class="col-author">작성자</th>
+                    <th class="col-date">작성일</th>
+                    <th class="col-views">조회수</th>
+                </tr>
+            </thead>
+            <tbody id="board-list-body"></tbody>
+        </table>
+        <p class="empty-message" id="empty-message" hidden>등록된 게시글이 없습니다.</p>
+
+        <div class="pagination" id="pagination"></div>
+    </main>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/board/common.js"></script>
+    <script src="/js/board/list.js"></script>
+</body>
+</html>

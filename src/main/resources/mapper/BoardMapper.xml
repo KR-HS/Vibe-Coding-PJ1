@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.board.mapper.BoardMapper">
+
+    <sql id="searchCondition">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (b.title LIKE CONCAT('%', #{keyword}, '%') OR b.content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="category != null">
+                AND b.category = #{category}
+            </if>
+        </where>
+    </sql>
+
+    <select id="findList" resultType="com.example.board.dto.response.BoardListItemResponse">
+        SELECT
+            b.id AS id,
+            b.title AS title,
+            b.category AS category,
+            u.name AS authorName,
+            b.view_count AS viewCount,
+            (SELECT COUNT(*) FROM comments c WHERE c.board_id = b.id) AS commentCount,
+            b.created_at AS createdAt
+        FROM boards b
+        JOIN users u ON u.id = b.user_id
+        <include refid="searchCondition"/>
+        ORDER BY b.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*)
+        FROM boards b
+        <include refid="searchCondition"/>
+    </select>
+
+</mapper>

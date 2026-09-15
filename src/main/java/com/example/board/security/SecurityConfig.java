@@ -2,6 +2,8 @@ package com.example.board.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,7 +13,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 import com.example.board.security.jwt.JwtAuthenticationFilter;
 import com.example.board.security.jwt.JwtTokenProvider;
@@ -26,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private static final String[] PERMIT_ALL_PATHS = {
-            "/", "/index.html", "/auth/**", "/css/**", "/js/**",
+            "/", "/index.html", "/auth/**", "/board/**", "/css/**", "/js/**",
             "/error", "/api/auth/**", "/oauth2/**", "/login/**"
     };
 
@@ -52,7 +56,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PERMIT_ALL_PATHS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/boards/**").permitAll()
                         .anyRequest().authenticated())
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .defaultAuthenticationEntryPointFor(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                PathPatternRequestMatcher.pathPattern("/api/**")))
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/auth/login.html")
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))

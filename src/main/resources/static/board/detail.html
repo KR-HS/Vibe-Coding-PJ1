@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 상세 - 게시판</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <a class="logo" href="/">게시판</a>
+        <nav class="nav-links" id="nav-links"></nav>
+    </header>
+
+    <main class="board-main">
+        <p class="not-found-message" id="not-found-message" hidden>게시글을 찾을 수 없습니다.</p>
+
+        <article class="board-detail" id="board-detail" hidden>
+            <div class="board-detail-header">
+                <span class="category-badge" id="detail-category"></span>
+                <h1 id="detail-title"></h1>
+                <div class="board-meta">
+                    <span id="detail-author"></span>
+                    <span id="detail-date"></span>
+                    <span id="detail-views"></span>
+                </div>
+            </div>
+
+            <div class="board-content" id="detail-content"></div>
+
+            <div class="attachment-list" id="attachment-list"></div>
+
+            <div class="board-detail-actions" id="board-owner-actions" hidden>
+                <a class="btn btn-secondary" id="edit-link" href="#">수정</a>
+                <button type="button" class="btn btn-danger" id="delete-button">삭제</button>
+            </div>
+
+            <a class="btn btn-secondary back-link" href="/board/list.html">목록으로</a>
+
+            <section class="comment-section">
+                <h2>댓글</h2>
+                <div class="comment-list" id="comment-list"></div>
+
+                <form id="comment-form" class="comment-form" hidden>
+                    <textarea id="comment-content" rows="3" maxlength="1000" placeholder="댓글을 입력하세요" required></textarea>
+                    <button type="submit">등록</button>
+                </form>
+                <p class="comment-login-notice" id="comment-login-notice">댓글을 작성하려면 <a href="/auth/login.html">로그인</a>하세요.</p>
+            </section>
+        </article>
+    </main>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/board/common.js"></script>
+    <script src="/js/board/detail.js"></script>
+</body>
+</html>

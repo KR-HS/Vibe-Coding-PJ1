@@ -40,8 +40,12 @@ class JwtTokenProviderTest {
     @Test
     void 서명이_변조된_토큰은_검증에_실패한다() {
         String accessToken = jwtTokenProvider.generateAccessToken(1L, Role.USER);
-        String tamperedToken = accessToken.substring(0, accessToken.length() - 1)
-                + (accessToken.endsWith("a") ? "b" : "a");
+        int tamperIndex = accessToken.length() / 2;
+        char original = accessToken.charAt(tamperIndex);
+        char replacement = original == 'a' ? 'b' : 'a';
+        String tamperedToken = accessToken.substring(0, tamperIndex)
+                + replacement
+                + accessToken.substring(tamperIndex + 1);
 
         assertThat(jwtTokenProvider.validateToken(tamperedToken)).isFalse();
     }
