@@ -2,12 +2,16 @@ package com.example.board.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.board.dto.request.CommentCreateRequest;
 import com.example.board.dto.request.CommentUpdateRequest;
 import com.example.board.dto.response.CommentResponse;
+import com.example.board.dto.response.MyCommentResponse;
+import com.example.board.dto.response.PageResponse;
 import com.example.board.entity.Board;
 import com.example.board.entity.Comment;
 import com.example.board.entity.Role;
@@ -37,6 +41,14 @@ public class CommentService {
         return commentRepository.findByBoardIdOrderByCreatedAtAsc(boardId).stream()
                 .map(CommentResponse::from)
                 .toList();
+    }
+
+    public PageResponse<MyCommentResponse> getMyList(Long userId, int page, int size) {
+        Page<Comment> result = commentRepository.findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size));
+        List<MyCommentResponse> content = result.getContent().stream()
+                .map(MyCommentResponse::from)
+                .toList();
+        return PageResponse.of(content, page, size, result.getTotalElements());
     }
 
     @Transactional

@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,10 +16,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.board.dto.request.CommentCreateRequest;
 import com.example.board.dto.request.CommentUpdateRequest;
+import com.example.board.dto.response.MyCommentResponse;
+import com.example.board.dto.response.PageResponse;
 import com.example.board.entity.Board;
 import com.example.board.entity.BoardCategory;
 import com.example.board.entity.Comment;
@@ -159,5 +164,19 @@ class CommentServiceTest {
                 .isInstanceOf(ForbiddenOperationException.class);
 
         verify(commentRepository, never()).delete(any());
+    }
+
+    @Test
+    void 내가_쓴_댓글_목록을_게시글_제목과_함께_조회한다() {
+        given(commentRepository.findByUserIdOrderByCreatedAtDesc(1L, PageRequest.of(0, 10)))
+                .willReturn(new PageImpl<>(List.of(comment)));
+
+        PageResponse<MyCommentResponse> response = commentService.getMyList(1L, 0, 10);
+
+        assertThat(response.content()).hasSize(1);
+        MyCommentResponse item = response.content().get(0);
+        assertThat(item.boardId()).isEqualTo(10L);
+        assertThat(item.boardTitle()).isEqualTo("제목");
+        assertThat(item.content()).isEqualTo("댓글 내용");
     }
 }

@@ -481,3 +481,51 @@ textarea {
     color: #6e7781;
     padding: 64px 0;
 }
+
+.mypage-profile {
+    margin-bottom: 20px;
+}
+
+.mypage-profile h1 {
+    margin: 0 0 8px;
+    font-size: 1.4rem;
+}
+
+.mypage-profile p {
+    margin: 0;
+    color: #57606a;
+}
+
+.mypage-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.mypage-tab {
+    width: auto;
+    padding: 8px 18px;
+    background: #fff;
+    color: #57606a;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.mypage-tab.active {
+    background: #1f6feb;
+    color: #fff;
+    border-color: #1f6feb;
+}
+
+.my-comment-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
+.my-comment-link:hover {
+    background: #f6f8fa;
+}

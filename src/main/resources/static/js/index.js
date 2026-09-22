@@ -9,6 +9,7 @@ async function renderLoggedIn() {
     document.getElementById("welcome-message").textContent = `${user.name}님, 환영합니다.`;
     document.getElementById("nav-links").innerHTML = `
         <a class="btn btn-secondary" href="/board/list.html">게시판</a>
+        <a class="btn btn-secondary" href="/mypage.html">마이페이지</a>
         <button id="logout-button" class="btn btn-secondary">로그아웃</button>
     `;
     document.getElementById("home-actions").innerHTML = `<a class="btn" href="/board/list.html">게시판 바로가기</a>`;

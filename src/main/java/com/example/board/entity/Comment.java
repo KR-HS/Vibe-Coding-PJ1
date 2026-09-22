@@ -21,7 +21,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "comments", indexes = @Index(name = "idx_comments_board_id", columnList = "board_id"))
+@Table(name = "comments", indexes = {
+        @Index(name = "idx_comments_board_id", columnList = "board_id"),
+        @Index(name = "idx_comments_user_id", columnList = "user_id")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment {

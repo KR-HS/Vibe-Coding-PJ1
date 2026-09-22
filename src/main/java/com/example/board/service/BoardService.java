@@ -44,8 +44,15 @@ public class BoardService {
 
     public PageResponse<BoardListItemResponse> getList(String keyword, BoardCategory category, int page, int size) {
         int offset = page * size;
-        List<BoardListItemResponse> content = boardMapper.findList(keyword, category, offset, size);
-        long totalElements = boardMapper.count(keyword, category);
+        List<BoardListItemResponse> content = boardMapper.findList(keyword, category, null, offset, size);
+        long totalElements = boardMapper.count(keyword, category, null);
+        return PageResponse.of(content, page, size, totalElements);
+    }
+
+    public PageResponse<BoardListItemResponse> getMyList(Long userId, int page, int size) {
+        int offset = page * size;
+        List<BoardListItemResponse> content = boardMapper.findList(null, null, userId, offset, size);
+        long totalElements = boardMapper.count(null, null, userId);
         return PageResponse.of(content, page, size, totalElements);
     }
 

@@ -10,6 +10,9 @@
             <if test="category != null">
                 AND b.category = #{category}
             </if>
+            <if test="authorId != null">
+                AND b.user_id = #{authorId}
+            </if>
         </where>
     </sql>
 

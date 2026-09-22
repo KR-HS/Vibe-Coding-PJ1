@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private static final String[] PERMIT_ALL_PATHS = {
-            "/", "/index.html", "/auth/**", "/board/**", "/css/**", "/js/**",
+            "/", "/index.html", "/auth/**", "/board/**", "/mypage.html", "/css/**", "/js/**",
             "/error", "/api/auth/**", "/oauth2/**", "/login/**"
     };
 

@@ -22,6 +22,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.example.board.dto.request.BoardCreateRequest;
 import com.example.board.dto.request.BoardUpdateRequest;
 import com.example.board.dto.response.BoardDetailResponse;
+import com.example.board.dto.response.BoardListItemResponse;
+import com.example.board.dto.response.PageResponse;
 import com.example.board.entity.Board;
 import com.example.board.entity.BoardCategory;
 import com.example.board.entity.Provider;
@@ -161,5 +163,18 @@ class BoardServiceTest {
                 .isInstanceOf(ForbiddenOperationException.class);
 
         verify(boardRepository, never()).delete(any());
+    }
+
+    @Test
+    void 내가_쓴_게시글_목록을_조회한다() {
+        BoardListItemResponse item = new BoardListItemResponse(
+                10L, "제목", BoardCategory.FREE, "작성자", 0, 0L, null);
+        given(boardMapper.findList(null, null, 1L, 0, 10)).willReturn(List.of(item));
+        given(boardMapper.count(null, null, 1L)).willReturn(1L);
+
+        PageResponse<BoardListItemResponse> response = boardService.getMyList(1L, 0, 10);
+
+        assertThat(response.content()).containsExactly(item);
+        assertThat(response.totalElements()).isEqualTo(1L);
     }
 }

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 - 게시판</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <a class="logo" href="/">게시판</a>
+        <nav class="nav-links" id="nav-links"></nav>
+    </header>
+
+    <main class="board-main">
+        <section class="mypage-profile card" id="mypage-profile"></section>
+
+        <div class="mypage-tabs">
+            <button type="button" class="mypage-tab active" id="tab-boards">내가 쓴 글</button>
+            <button type="button" class="mypage-tab" id="tab-comments">내가 쓴 댓글</button>
+        </div>
+
+        <div id="panel-boards">
+            <table class="board-table">
+                <thead>
+                    <tr>
+                        <th class="col-category">카테고리</th>
+                        <th class="col-title">제목</th>
+                        <th class="col-date">작성일</th>
+                        <th class="col-views">조회수</th>
+                    </tr>
+                </thead>
+                <tbody id="my-board-list-body"></tbody>
+            </table>
+            <p class="empty-message" id="my-board-empty" hidden>작성한 게시글이 없습니다.</p>
+            <div class="pagination" id="my-board-pagination"></div>
+        </div>
+
+        <div id="panel-comments" hidden>
+            <div class="comment-list" id="my-comment-list"></div>
+            <p class="empty-message" id="my-comment-empty" hidden>작성한 댓글이 없습니다.</p>
+            <div class="pagination" id="my-comment-pagination"></div>
+        </div>
+    </main>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/board/common.js"></script>
+    <script src="/js/mypage.js"></script>
+</body>
+</html>
