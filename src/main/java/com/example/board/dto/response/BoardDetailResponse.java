@@ -14,11 +14,13 @@ public record BoardDetailResponse(
         Long authorId,
         String authorName,
         int viewCount,
+        long likeCount,
+        boolean liked,
         List<AttachmentResponse> attachments,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static BoardDetailResponse of(Board board, List<AttachmentResponse> attachments) {
+    public static BoardDetailResponse of(Board board, long likeCount, boolean liked, List<AttachmentResponse> attachments) {
         return new BoardDetailResponse(
                 board.getId(),
                 board.getTitle(),
@@ -27,6 +29,8 @@ public record BoardDetailResponse(
                 board.getUser().getId(),
                 board.getUser().getName(),
                 board.getViewCount(),
+                likeCount,
+                liked,
                 attachments,
                 board.getCreatedAt(),
                 board.getUpdatedAt()

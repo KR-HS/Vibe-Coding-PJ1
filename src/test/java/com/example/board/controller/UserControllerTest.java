@@ -64,7 +64,7 @@ class UserControllerTest {
     @Test
     void 내가_쓴_게시글_목록을_조회할_수_있다() {
         BoardListItemResponse item = new BoardListItemResponse(
-                10L, "제목", BoardCategory.FREE, "홍길동", 0, 0L, null);
+                10L, "제목", BoardCategory.FREE, "홍길동", 0, 0L, 0L, null);
         given(boardService.getMyList(1L, 0, 10)).willReturn(PageResponse.of(List.of(item), 0, 10, 1L));
 
         ResponseEntity<PageResponse<BoardListItemResponse>> response = userController.myBoards(userDetails, 0, 10);
@@ -79,6 +79,18 @@ class UserControllerTest {
         given(commentService.getMyList(1L, 0, 10)).willReturn(PageResponse.of(List.of(item), 0, 10, 1L));
 
         ResponseEntity<PageResponse<MyCommentResponse>> response = userController.myComments(userDetails, 0, 10);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().content()).containsExactly(item);
+    }
+
+    @Test
+    void 내가_좋아요_누른_게시글_목록을_조회할_수_있다() {
+        BoardListItemResponse item = new BoardListItemResponse(
+                10L, "제목", BoardCategory.FREE, "다른작성자", 0, 0L, 1L, null);
+        given(boardService.getLikedList(1L, 0, 10)).willReturn(PageResponse.of(List.of(item), 0, 10, 1L));
+
+        ResponseEntity<PageResponse<BoardListItemResponse>> response = userController.myLikes(userDetails, 0, 10);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().content()).containsExactly(item);

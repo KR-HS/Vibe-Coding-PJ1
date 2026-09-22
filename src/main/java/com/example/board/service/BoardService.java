@@ -13,10 +13,12 @@ import com.example.board.dto.request.BoardUpdateRequest;
 import com.example.board.dto.response.AttachmentResponse;
 import com.example.board.dto.response.BoardDetailResponse;
 import com.example.board.dto.response.BoardListItemResponse;
+import com.example.board.dto.response.LikeResponse;
 import com.example.board.dto.response.PageResponse;
 import com.example.board.entity.Attachment;
 import com.example.board.entity.Board;
 import com.example.board.entity.BoardCategory;
+import com.example.board.entity.BoardLike;
 import com.example.board.entity.Role;
 import com.example.board.entity.User;
 import com.example.board.exception.AttachmentNotFoundException;
@@ -24,6 +26,7 @@ import com.example.board.exception.BoardNotFoundException;
 import com.example.board.exception.ForbiddenOperationException;
 import com.example.board.mapper.BoardMapper;
 import com.example.board.repository.AttachmentRepository;
+import com.example.board.repository.BoardLikeRepository;
 import com.example.board.repository.BoardRepository;
 import com.example.board.repository.CommentRepository;
 import com.example.board.repository.UserRepository;
@@ -39,32 +42,61 @@ public class BoardService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final AttachmentRepository attachmentRepository;
+    private final BoardLikeRepository boardLikeRepository;
     private final BoardMapper boardMapper;
     private final FileStorageService fileStorageService;
 
     public PageResponse<BoardListItemResponse> getList(String keyword, BoardCategory category, int page, int size) {
         int offset = page * size;
-        List<BoardListItemResponse> content = boardMapper.findList(keyword, category, null, offset, size);
-        long totalElements = boardMapper.count(keyword, category, null);
+        List<BoardListItemResponse> content = boardMapper.findList(keyword, category, null, null, offset, size);
+        long totalElements = boardMapper.count(keyword, category, null, null);
         return PageResponse.of(content, page, size, totalElements);
     }
 
     public PageResponse<BoardListItemResponse> getMyList(Long userId, int page, int size) {
         int offset = page * size;
-        List<BoardListItemResponse> content = boardMapper.findList(null, null, userId, offset, size);
-        long totalElements = boardMapper.count(null, null, userId);
+        List<BoardListItemResponse> content = boardMapper.findList(null, null, userId, null, offset, size);
+        long totalElements = boardMapper.count(null, null, userId, null);
+        return PageResponse.of(content, page, size, totalElements);
+    }
+
+    public PageResponse<BoardListItemResponse> getLikedList(Long userId, int page, int size) {
+        int offset = page * size;
+        List<BoardListItemResponse> content = boardMapper.findList(null, null, null, userId, offset, size);
+        long totalElements = boardMapper.count(null, null, null, userId);
         return PageResponse.of(content, page, size, totalElements);
     }
 
     @Transactional
-    public BoardDetailResponse getDetail(Long boardId) {
+    public BoardDetailResponse getDetail(Long boardId, Long userId) {
         Board board = getBoardOrThrow(boardId);
         board.increaseViewCount();
 
         List<AttachmentResponse> attachments = attachmentRepository.findByBoardId(boardId).stream()
                 .map(AttachmentResponse::from)
                 .toList();
-        return BoardDetailResponse.of(board, attachments);
+        long likeCount = boardLikeRepository.countByBoardId(boardId);
+        boolean liked = userId != null && boardLikeRepository.existsByBoardIdAndUserId(boardId, userId);
+        return BoardDetailResponse.of(board, likeCount, liked, attachments);
+    }
+
+    @Transactional
+    public LikeResponse like(Long userId, Long boardId) {
+        Board board = getBoardOrThrow(boardId);
+        if (!boardLikeRepository.existsByBoardIdAndUserId(boardId, userId)) {
+            boardLikeRepository.save(BoardLike.builder()
+                    .board(board)
+                    .user(userRepository.getReferenceById(userId))
+                    .build());
+        }
+        return new LikeResponse(boardLikeRepository.countByBoardId(boardId), true);
+    }
+
+    @Transactional
+    public LikeResponse unlike(Long userId, Long boardId) {
+        getBoardOrThrow(boardId);
+        boardLikeRepository.deleteByBoardIdAndUserId(boardId, userId);
+        return new LikeResponse(boardLikeRepository.countByBoardId(boardId), false);
     }
 
     @Transactional
@@ -119,6 +151,7 @@ public class BoardService {
         attachmentRepository.deleteAll(attachments);
 
         commentRepository.deleteByBoardId(boardId);
+        boardLikeRepository.deleteByBoardId(boardId);
         boardRepository.delete(board);
     }
 

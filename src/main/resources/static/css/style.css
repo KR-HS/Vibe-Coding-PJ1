@@ -230,7 +230,8 @@ button:hover, .btn:hover {
 .board-table .col-category,
 .board-table .col-author,
 .board-table .col-date,
-.board-table .col-views {
+.board-table .col-views,
+.board-table .col-likes {
     white-space: nowrap;
     width: 1%;
 }
@@ -528,4 +529,33 @@ textarea {
 
 .my-comment-link:hover {
     background: #f6f8fa;
+}
+
+.board-like-section {
+    margin: 16px 0 24px;
+}
+
+.like-button {
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: #fff;
+    color: #57606a;
+    border: 1px solid #d0d7de;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.like-button:hover {
+    background: #f6f8fa;
+}
+
+.like-button.liked {
+    background: #fff0f3;
+    color: #cf222e;
+    border-color: #ffc1cc;
 }

@@ -27,6 +27,7 @@ import com.example.board.dto.request.BoardCreateRequest;
 import com.example.board.dto.request.BoardUpdateRequest;
 import com.example.board.dto.response.BoardDetailResponse;
 import com.example.board.dto.response.BoardListItemResponse;
+import com.example.board.dto.response.LikeResponse;
 import com.example.board.dto.response.PageResponse;
 import com.example.board.entity.BoardCategory;
 import com.example.board.security.CustomUserDetails;
@@ -52,8 +53,25 @@ public class BoardController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BoardDetailResponse> getDetail(@PathVariable Long id) {
-        return ResponseEntity.ok(boardService.getDetail(id));
+    public ResponseEntity<BoardDetailResponse> getDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long id) {
+        Long userId = userDetails != null ? userDetails.getId() : null;
+        return ResponseEntity.ok(boardService.getDetail(id, userId));
+    }
+
+    @PostMapping("/{id}/likes")
+    public ResponseEntity<LikeResponse> like(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(boardService.like(userDetails.getId(), id));
+    }
+
+    @DeleteMapping("/{id}/likes")
+    public ResponseEntity<LikeResponse> unlike(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(boardService.unlike(userDetails.getId(), id));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

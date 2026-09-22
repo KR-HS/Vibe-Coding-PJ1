@@ -45,4 +45,12 @@ public class UserController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(commentService.getMyList(userDetails.getId(), page, size));
     }
+
+    @GetMapping("/me/likes")
+    public ResponseEntity<PageResponse<BoardListItemResponse>> myLikes(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(boardService.getLikedList(userDetails.getId(), page, size));
+    }
 }

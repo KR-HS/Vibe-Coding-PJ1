@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import com.example.board.dto.request.BoardUpdateRequest;
 import com.example.board.dto.response.BoardDetailResponse;
 import com.example.board.dto.response.BoardListItemResponse;
+import com.example.board.dto.response.LikeResponse;
 import com.example.board.dto.response.PageResponse;
 import com.example.board.entity.BoardCategory;
 import com.example.board.entity.Provider;
@@ -54,7 +55,7 @@ class BoardControllerTest {
     @Test
     void 게시글_목록을_조회하면_200을_반환한다() throws Exception {
         BoardListItemResponse item = new BoardListItemResponse(
-                1L, "제목", BoardCategory.FREE, "작성자", 0, 0, null);
+                1L, "제목", BoardCategory.FREE, "작성자", 0, 0, 0, null);
         given(boardService.getList(any(), any(), eq(0), eq(10)))
                 .willReturn(PageResponse.of(List.of(item), 0, 10, 1));
 
@@ -64,14 +65,55 @@ class BoardControllerTest {
     }
 
     @Test
-    void 게시글_상세를_조회하면_200을_반환한다() throws Exception {
+    void 비로그인_사용자가_게시글_상세를_조회하면_liked가_false로_내려온다() {
         BoardDetailResponse response = new BoardDetailResponse(
-                1L, "제목", "내용", BoardCategory.FREE, 1L, "작성자", 1, List.of(), null, null);
-        given(boardService.getDetail(1L)).willReturn(response);
+                1L, "제목", "내용", BoardCategory.FREE, 1L, "작성자", 1, 0, false, List.of(), null, null);
+        given(boardService.getDetail(1L, null)).willReturn(response);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/boards/1"))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("제목"));
+        ResponseEntity<BoardDetailResponse> result = new BoardController(boardService).getDetail(null, 1L);
+
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getBody().liked()).isFalse();
+    }
+
+    @Test
+    void 로그인_사용자가_게시글_상세를_조회하면_본인_ID로_liked를_계산한다() {
+        User user = testUser();
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        BoardDetailResponse response = new BoardDetailResponse(
+                1L, "제목", "내용", BoardCategory.FREE, 2L, "작성자", 1, 1, true, List.of(), null, null);
+        given(boardService.getDetail(1L, 1L)).willReturn(response);
+
+        ResponseEntity<BoardDetailResponse> result = new BoardController(boardService).getDetail(userDetails, 1L);
+
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getBody().liked()).isTrue();
+    }
+
+    @Test
+    void 좋아요를_누르면_200과_좋아요_수를_반환한다() {
+        User user = testUser();
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        given(boardService.like(1L, 1L)).willReturn(new LikeResponse(1L, true));
+
+        ResponseEntity<LikeResponse> response = new BoardController(boardService).like(userDetails, 1L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().likeCount()).isEqualTo(1L);
+        assertThat(response.getBody().liked()).isTrue();
+    }
+
+    @Test
+    void 좋아요를_취소하면_200과_좋아요_수를_반환한다() {
+        User user = testUser();
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        given(boardService.unlike(1L, 1L)).willReturn(new LikeResponse(0L, false));
+
+        ResponseEntity<LikeResponse> response = new BoardController(boardService).unlike(userDetails, 1L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().likeCount()).isEqualTo(0L);
+        assertThat(response.getBody().liked()).isFalse();
     }
 
     @Test

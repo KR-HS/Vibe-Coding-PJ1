@@ -13,6 +13,9 @@
             <if test="authorId != null">
                 AND b.user_id = #{authorId}
             </if>
+            <if test="likedByUserId != null">
+                AND EXISTS (SELECT 1 FROM board_likes bl2 WHERE bl2.board_id = b.id AND bl2.user_id = #{likedByUserId})
+            </if>
         </where>
     </sql>
 
@@ -24,6 +27,7 @@
             u.name AS authorName,
             b.view_count AS viewCount,
             (SELECT COUNT(*) FROM comments c WHERE c.board_id = b.id) AS commentCount,
+            (SELECT COUNT(*) FROM board_likes bl WHERE bl.board_id = b.id) AS likeCount,
             b.created_at AS createdAt
         FROM boards b
         JOIN users u ON u.id = b.user_id

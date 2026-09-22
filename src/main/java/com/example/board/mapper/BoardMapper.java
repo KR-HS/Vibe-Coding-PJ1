@@ -15,11 +15,13 @@ public interface BoardMapper {
             @Param("keyword") String keyword,
             @Param("category") BoardCategory category,
             @Param("authorId") Long authorId,
+            @Param("likedByUserId") Long likedByUserId,
             @Param("offset") int offset,
             @Param("limit") int limit);
 
     long count(
             @Param("keyword") String keyword,
             @Param("category") BoardCategory category,
-            @Param("authorId") Long authorId);
+            @Param("authorId") Long authorId,
+            @Param("likedByUserId") Long likedByUserId);
 }

@@ -24,6 +24,7 @@ import com.example.board.dto.request.BoardUpdateRequest;
 import com.example.board.dto.response.BoardDetailResponse;
 import com.example.board.dto.response.BoardListItemResponse;
 import com.example.board.dto.response.PageResponse;
+import com.example.board.dto.response.LikeResponse;
 import com.example.board.entity.Board;
 import com.example.board.entity.BoardCategory;
 import com.example.board.entity.Provider;
@@ -33,6 +34,7 @@ import com.example.board.exception.BoardNotFoundException;
 import com.example.board.exception.ForbiddenOperationException;
 import com.example.board.mapper.BoardMapper;
 import com.example.board.repository.AttachmentRepository;
+import com.example.board.repository.BoardLikeRepository;
 import com.example.board.repository.BoardRepository;
 import com.example.board.repository.CommentRepository;
 import com.example.board.repository.UserRepository;
@@ -48,6 +50,8 @@ class BoardServiceTest {
     private CommentRepository commentRepository;
     @Mock
     private AttachmentRepository attachmentRepository;
+    @Mock
+    private BoardLikeRepository boardLikeRepository;
     @Mock
     private BoardMapper boardMapper;
     @Mock
@@ -99,19 +103,83 @@ class BoardServiceTest {
     void 게시글_상세조회시_조회수가_증가한다() {
         given(boardRepository.findById(10L)).willReturn(Optional.of(board));
         given(attachmentRepository.findByBoardId(10L)).willReturn(List.of());
+        given(boardLikeRepository.countByBoardId(10L)).willReturn(0L);
 
-        BoardDetailResponse response = boardService.getDetail(10L);
+        BoardDetailResponse response = boardService.getDetail(10L, null);
 
         assertThat(response.viewCount()).isEqualTo(1);
         assertThat(board.getViewCount()).isEqualTo(1);
+        assertThat(response.liked()).isFalse();
+    }
+
+    @Test
+    void 로그인한_사용자가_좋아요를_눌렀으면_상세조회에_반영된다() {
+        given(boardRepository.findById(10L)).willReturn(Optional.of(board));
+        given(attachmentRepository.findByBoardId(10L)).willReturn(List.of());
+        given(boardLikeRepository.countByBoardId(10L)).willReturn(3L);
+        given(boardLikeRepository.existsByBoardIdAndUserId(10L, 1L)).willReturn(true);
+
+        BoardDetailResponse response = boardService.getDetail(10L, 1L);
+
+        assertThat(response.likeCount()).isEqualTo(3L);
+        assertThat(response.liked()).isTrue();
     }
 
     @Test
     void 존재하지_않는_게시글을_조회하면_예외가_발생한다() {
         given(boardRepository.findById(999L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> boardService.getDetail(999L))
+        assertThatThrownBy(() -> boardService.getDetail(999L, null))
                 .isInstanceOf(BoardNotFoundException.class);
+    }
+
+    @Test
+    void 좋아요를_누르면_좋아요가_추가되고_카운트를_반환한다() {
+        given(boardRepository.findById(10L)).willReturn(Optional.of(board));
+        given(boardLikeRepository.existsByBoardIdAndUserId(10L, 2L)).willReturn(false);
+        given(userRepository.getReferenceById(2L)).willReturn(author);
+        given(boardLikeRepository.countByBoardId(10L)).willReturn(1L);
+
+        LikeResponse response = boardService.like(2L, 10L);
+
+        assertThat(response.likeCount()).isEqualTo(1L);
+        assertThat(response.liked()).isTrue();
+        verify(boardLikeRepository).save(any());
+    }
+
+    @Test
+    void 이미_좋아요한_상태에서_다시_누르면_중복_저장하지_않는다() {
+        given(boardRepository.findById(10L)).willReturn(Optional.of(board));
+        given(boardLikeRepository.existsByBoardIdAndUserId(10L, 2L)).willReturn(true);
+        given(boardLikeRepository.countByBoardId(10L)).willReturn(1L);
+
+        LikeResponse response = boardService.like(2L, 10L);
+
+        assertThat(response.likeCount()).isEqualTo(1L);
+        assertThat(response.liked()).isTrue();
+        verify(boardLikeRepository, never()).save(any());
+    }
+
+    @Test
+    void 좋아요를_취소하면_좋아요가_삭제되고_카운트를_반환한다() {
+        given(boardRepository.findById(10L)).willReturn(Optional.of(board));
+        given(boardLikeRepository.countByBoardId(10L)).willReturn(0L);
+
+        LikeResponse response = boardService.unlike(2L, 10L);
+
+        assertThat(response.likeCount()).isEqualTo(0L);
+        assertThat(response.liked()).isFalse();
+        verify(boardLikeRepository).deleteByBoardIdAndUserId(10L, 2L);
+    }
+
+    @Test
+    void 좋아요하지_않은_상태에서_취소해도_예외가_발생하지_않는다() {
+        given(boardRepository.findById(10L)).willReturn(Optional.of(board));
+        given(boardLikeRepository.countByBoardId(10L)).willReturn(0L);
+
+        LikeResponse response = boardService.unlike(2L, 10L);
+
+        assertThat(response.liked()).isFalse();
     }
 
     @Test
@@ -142,6 +210,7 @@ class BoardServiceTest {
         boardService.delete(1L, Role.USER, 10L);
 
         verify(commentRepository).deleteByBoardId(10L);
+        verify(boardLikeRepository).deleteByBoardId(10L);
         verify(boardRepository).delete(board);
     }
 
@@ -168,11 +237,24 @@ class BoardServiceTest {
     @Test
     void 내가_쓴_게시글_목록을_조회한다() {
         BoardListItemResponse item = new BoardListItemResponse(
-                10L, "제목", BoardCategory.FREE, "작성자", 0, 0L, null);
-        given(boardMapper.findList(null, null, 1L, 0, 10)).willReturn(List.of(item));
-        given(boardMapper.count(null, null, 1L)).willReturn(1L);
+                10L, "제목", BoardCategory.FREE, "작성자", 0, 0L, 0L, null);
+        given(boardMapper.findList(null, null, 1L, null, 0, 10)).willReturn(List.of(item));
+        given(boardMapper.count(null, null, 1L, null)).willReturn(1L);
 
         PageResponse<BoardListItemResponse> response = boardService.getMyList(1L, 0, 10);
+
+        assertThat(response.content()).containsExactly(item);
+        assertThat(response.totalElements()).isEqualTo(1L);
+    }
+
+    @Test
+    void 내가_좋아요_누른_게시글_목록을_조회한다() {
+        BoardListItemResponse item = new BoardListItemResponse(
+                10L, "제목", BoardCategory.FREE, "작성자", 0, 0L, 1L, null);
+        given(boardMapper.findList(null, null, null, 1L, 0, 10)).willReturn(List.of(item));
+        given(boardMapper.count(null, null, null, 1L)).willReturn(1L);
+
+        PageResponse<BoardListItemResponse> response = boardService.getLikedList(1L, 0, 10);
 
         assertThat(response.content()).containsExactly(item);
         assertThat(response.totalElements()).isEqualTo(1L);

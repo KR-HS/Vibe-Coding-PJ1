@@ -4,7 +4,7 @@ if (!isLoggedIn()) {
     window.location.href = "/auth/login.html";
 }
 
-const state = { boardsPage: 0, commentsPage: 0 };
+const state = { boardsPage: 0, commentsPage: 0, likesPage: 0 };
 
 async function loadProfile() {
     const response = await authFetch("/api/users/me");
@@ -87,17 +87,55 @@ function renderMyComments(rows) {
     `).join("");
 }
 
+async function loadMyLikes() {
+    const response = await authFetch(`/api/users/me/likes?page=${state.likesPage}&size=10`);
+    if (!response.ok) {
+        return;
+    }
+    const pageResponse = await response.json();
+    renderMyLikes(pageResponse.content);
+    renderPagination(document.getElementById("my-like-pagination"), pageResponse, (page) => {
+        state.likesPage = page;
+        loadMyLikes();
+    });
+}
+
+function renderMyLikes(rows) {
+    const tbody = document.getElementById("my-like-list-body");
+    const emptyMessage = document.getElementById("my-like-empty");
+
+    if (rows.length === 0) {
+        tbody.innerHTML = "";
+        emptyMessage.hidden = false;
+        return;
+    }
+    emptyMessage.hidden = true;
+
+    tbody.innerHTML = rows.map((board) => `
+        <tr>
+            <td class="col-category"><span class="category-badge category-${board.category}">${categoryLabel(board.category)}</span></td>
+            <td class="col-title"><a href="/board/detail.html?id=${board.id}">${escapeHtml(board.title)}</a></td>
+            <td class="col-author">${escapeHtml(board.authorName)}</td>
+            <td class="col-date">${formatDateTime(board.createdAt)}</td>
+            <td class="col-likes">${board.likeCount}</td>
+        </tr>
+    `).join("");
+}
+
 function switchTab(tab) {
-    const isBoards = tab === "boards";
-    document.getElementById("tab-boards").classList.toggle("active", isBoards);
-    document.getElementById("tab-comments").classList.toggle("active", !isBoards);
-    document.getElementById("panel-boards").hidden = !isBoards;
-    document.getElementById("panel-comments").hidden = isBoards;
+    document.getElementById("tab-boards").classList.toggle("active", tab === "boards");
+    document.getElementById("tab-comments").classList.toggle("active", tab === "comments");
+    document.getElementById("tab-likes").classList.toggle("active", tab === "likes");
+    document.getElementById("panel-boards").hidden = tab !== "boards";
+    document.getElementById("panel-comments").hidden = tab !== "comments";
+    document.getElementById("panel-likes").hidden = tab !== "likes";
 }
 
 document.getElementById("tab-boards").addEventListener("click", () => switchTab("boards"));
 document.getElementById("tab-comments").addEventListener("click", () => switchTab("comments"));
+document.getElementById("tab-likes").addEventListener("click", () => switchTab("likes"));
 
 loadProfile();
 loadMyBoards();
 loadMyComments();
+loadMyLikes();

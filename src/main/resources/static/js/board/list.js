@@ -49,6 +49,7 @@ function renderRows(rows) {
             <td class="col-author">${escapeHtml(board.authorName)}</td>
             <td class="col-date">${formatDateTime(board.createdAt)}</td>
             <td class="col-views">${board.viewCount}</td>
+            <td class="col-likes">${board.likeCount}</td>
         </tr>
     `).join("");
 }

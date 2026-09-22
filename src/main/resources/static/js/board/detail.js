@@ -31,7 +31,7 @@ async function loadBoard() {
         return;
     }
 
-    const response = await fetch(`/api/boards/${boardId}`);
+    const response = await authFetch(`/api/boards/${boardId}`);
     if (!response.ok) {
         document.getElementById("not-found-message").hidden = false;
         return;
@@ -50,6 +50,8 @@ function renderBoard(board) {
     document.getElementById("detail-date").textContent = formatDateTime(board.createdAt);
     document.getElementById("detail-views").textContent = `조회 ${board.viewCount}`;
     document.getElementById("detail-content").innerHTML = escapeHtml(board.content).replaceAll("\n", "<br>");
+
+    renderLikeButton(board.liked, board.likeCount);
 
     const attachmentList = document.getElementById("attachment-list");
     if (board.attachments.length === 0) {
@@ -205,6 +207,28 @@ document.getElementById("comment-form").addEventListener("submit", async (event)
     if (response.ok) {
         textarea.value = "";
         loadComments();
+    }
+});
+
+function renderLikeButton(liked, likeCount) {
+    const button = document.getElementById("like-button");
+    document.getElementById("like-icon").textContent = liked ? "♥" : "♡";
+    document.getElementById("like-count").textContent = likeCount;
+    button.classList.toggle("liked", liked);
+    button.dataset.liked = liked;
+}
+
+document.getElementById("like-button").addEventListener("click", async () => {
+    if (!isLoggedIn()) {
+        window.location.href = "/auth/login.html";
+        return;
+    }
+
+    const liked = document.getElementById("like-button").dataset.liked === "true";
+    const response = await authFetch(`/api/boards/${boardId}/likes`, { method: liked ? "DELETE" : "POST" });
+    if (response.ok) {
+        const result = await response.json();
+        renderLikeButton(result.liked, result.likeCount);
     }
 });
 
