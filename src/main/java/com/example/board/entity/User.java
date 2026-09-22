@@ -80,6 +80,10 @@ public class User {
         this.password = encodedPassword;
     }
 
+    public void changeRole(Role role) {
+        this.role = role;
+    }
+
     public boolean isOAuthUser() {
         return this.provider != Provider.LOCAL;
     }

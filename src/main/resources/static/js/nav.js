@@ -14,10 +14,12 @@ async function renderNav() {
         renderLoggedOutNav(navLinks);
         return;
     }
+    const user = await response.json();
 
     navLinks.innerHTML = `
         <a class="btn btn-secondary" href="/board/list.html">게시판</a>
         <a class="btn btn-secondary" href="/mypage.html">마이페이지</a>
+        ${user.role === "ADMIN" ? `<a class="btn btn-secondary" href="/admin/users.html">관리자</a>` : ""}
         <button id="logout-button" class="btn btn-secondary">로그아웃</button>
     `;
     document.getElementById("logout-button").addEventListener("click", async () => {

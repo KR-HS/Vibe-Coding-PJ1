@@ -26,7 +26,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(e.getMessage()));
     }
 
-    @ExceptionHandler({BoardNotFoundException.class, CommentNotFoundException.class, AttachmentNotFoundException.class})
+    @ExceptionHandler({BoardNotFoundException.class, CommentNotFoundException.class, AttachmentNotFoundException.class,
+            UserNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));
     }

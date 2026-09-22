@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.board.entity.Provider;
-import com.example.board.entity.Role;
 import com.example.board.entity.User;
 import com.example.board.repository.UserRepository;
+import com.example.board.security.AdminBootstrapPolicy;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
+    private final AdminBootstrapPolicy adminBootstrapPolicy;
 
     @Override
     @Transactional
@@ -42,7 +43,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                                 .name(userInfo.getName())
                                 .provider(Provider.valueOf(registrationId.toUpperCase()))
                                 .providerId(userInfo.getProviderId())
-                                .role(Role.USER)
+                                .role(adminBootstrapPolicy.resolveRole(userInfo.getEmail()))
                                 .build()));
     }
 

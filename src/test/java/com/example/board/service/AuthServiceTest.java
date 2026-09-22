@@ -34,6 +34,7 @@ import com.example.board.exception.DuplicateEmailException;
 import com.example.board.exception.InvalidTokenException;
 import com.example.board.repository.RefreshTokenRepository;
 import com.example.board.repository.UserRepository;
+import com.example.board.security.AdminBootstrapPolicy;
 import com.example.board.security.CustomUserDetails;
 import com.example.board.security.jwt.JwtTokenProvider;
 
@@ -50,6 +51,8 @@ class AuthServiceTest {
     private JwtTokenProvider jwtTokenProvider;
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
+    @Mock
+    private AdminBootstrapPolicy adminBootstrapPolicy;
 
     @InjectMocks
     private AuthService authService;
@@ -73,6 +76,7 @@ class AuthServiceTest {
         SignupRequest request = new SignupRequest("user@example.com", "password123", "홍길동");
         given(userRepository.existsByEmail(request.email())).willReturn(false);
         given(passwordEncoder.encode(request.password())).willReturn("encoded-password");
+        given(adminBootstrapPolicy.resolveRole(request.email())).willReturn(Role.USER);
         given(userRepository.save(any(User.class))).willReturn(user);
 
         UserResponse response = authService.signup(request);
@@ -80,6 +84,26 @@ class AuthServiceTest {
         assertThat(response.id()).isEqualTo(1L);
         assertThat(response.email()).isEqualTo("user@example.com");
         assertThat(response.role()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    void 부트스트랩_관리자_이메일로_가입하면_ADMIN으로_생성된다() {
+        SignupRequest request = new SignupRequest("admin@example.com", "password123", "관리자");
+        User adminUser = User.builder()
+                .email("admin@example.com")
+                .password("encoded-password")
+                .name("관리자")
+                .provider(Provider.LOCAL)
+                .role(Role.ADMIN)
+                .build();
+        given(userRepository.existsByEmail(request.email())).willReturn(false);
+        given(passwordEncoder.encode(request.password())).willReturn("encoded-password");
+        given(adminBootstrapPolicy.resolveRole(request.email())).willReturn(Role.ADMIN);
+        given(userRepository.save(any(User.class))).willReturn(adminUser);
+
+        UserResponse response = authService.signup(request);
+
+        assertThat(response.role()).isEqualTo(Role.ADMIN);
     }
 
     @Test

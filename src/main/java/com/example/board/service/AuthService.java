@@ -19,6 +19,7 @@ import com.example.board.exception.DuplicateEmailException;
 import com.example.board.exception.InvalidTokenException;
 import com.example.board.repository.RefreshTokenRepository;
 import com.example.board.repository.UserRepository;
+import com.example.board.security.AdminBootstrapPolicy;
 import com.example.board.security.CustomUserDetails;
 import com.example.board.security.jwt.JwtTokenProvider;
 
@@ -34,6 +35,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AdminBootstrapPolicy adminBootstrapPolicy;
 
     @Transactional
     public UserResponse signup(SignupRequest request) {
@@ -46,7 +48,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.password()))
                 .name(request.name())
                 .provider(Provider.LOCAL)
-                .role(Role.USER)
+                .role(adminBootstrapPolicy.resolveRole(request.email()))
                 .build();
 
         return UserResponse.from(userRepository.save(user));

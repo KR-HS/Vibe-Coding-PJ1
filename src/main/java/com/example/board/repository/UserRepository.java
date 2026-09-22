@@ -2,6 +2,8 @@ package com.example.board.repository;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.board.entity.Provider;
@@ -14,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     Optional<User> findByProviderAndProviderId(Provider provider, String providerId);
+
+    Page<User> findByEmailContainingOrNameContaining(String emailKeyword, String nameKeyword, Pageable pageable);
 }

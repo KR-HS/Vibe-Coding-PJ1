@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private static final String[] PERMIT_ALL_PATHS = {
-            "/", "/index.html", "/auth/**", "/board/**", "/mypage.html", "/css/**", "/js/**",
+            "/", "/index.html", "/auth/**", "/board/**", "/mypage.html", "/admin/**", "/css/**", "/js/**",
             "/error", "/api/auth/**", "/oauth2/**", "/login/**"
     };
 
@@ -57,6 +57,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PERMIT_ALL_PATHS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/boards/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .defaultAuthenticationEntryPointFor(

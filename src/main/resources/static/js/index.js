@@ -10,10 +10,10 @@ async function renderLoggedIn() {
     document.getElementById("nav-links").innerHTML = `
         <a class="btn btn-secondary" href="/board/list.html">게시판</a>
         <a class="btn btn-secondary" href="/mypage.html">마이페이지</a>
+        ${user.role === "ADMIN" ? `<a class="btn btn-secondary" href="/admin/users.html">관리자</a>` : ""}
         <button id="logout-button" class="btn btn-secondary">로그아웃</button>
     `;
     document.getElementById("home-actions").innerHTML = `<a class="btn" href="/board/list.html">게시판 바로가기</a>`;
-
     document.getElementById("logout-button").addEventListener("click", async () => {
         await authFetch("/api/auth/logout", { method: "POST" });
         clearTokens();
