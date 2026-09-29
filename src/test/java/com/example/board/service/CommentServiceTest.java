@@ -13,9 +13,11 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -30,6 +32,7 @@ import com.example.board.entity.Comment;
 import com.example.board.entity.Provider;
 import com.example.board.entity.Role;
 import com.example.board.entity.User;
+import com.example.board.event.CommentCreatedEvent;
 import com.example.board.exception.BoardNotFoundException;
 import com.example.board.exception.CommentNotFoundException;
 import com.example.board.exception.ForbiddenOperationException;
@@ -46,6 +49,8 @@ class CommentServiceTest {
     private BoardRepository boardRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private CommentService commentService;
@@ -99,6 +104,24 @@ class CommentServiceTest {
         Long commentId = commentService.create(1L, 10L, request);
 
         assertThat(commentId).isEqualTo(100L);
+    }
+
+    @Test
+    void 댓글을_작성하면_CommentCreatedEvent를_발행한다() {
+        CommentCreateRequest request = new CommentCreateRequest("댓글 내용");
+        given(boardRepository.findById(10L)).willReturn(Optional.of(board));
+        given(userRepository.getReferenceById(2L)).willReturn(author);
+        given(commentRepository.save(any(Comment.class))).willReturn(comment);
+
+        commentService.create(2L, 10L, request);
+
+        ArgumentCaptor<CommentCreatedEvent> captor = ArgumentCaptor.forClass(CommentCreatedEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        CommentCreatedEvent event = captor.getValue();
+        assertThat(event.commentId()).isEqualTo(100L);
+        assertThat(event.boardId()).isEqualTo(10L);
+        assertThat(event.boardAuthorId()).isEqualTo(1L);
+        assertThat(event.commenterId()).isEqualTo(2L);
     }
 
     @Test

@@ -54,7 +54,7 @@ class AuthControllerTest {
     @Test
     void 회원가입_요청이_성공하면_201을_반환한다() throws Exception {
         SignupRequest request = new SignupRequest("user@example.com", "password123", "홍길동");
-        given(authService.signup(any())).willReturn(new UserResponse(1L, "user@example.com", "홍길동", Role.USER));
+        given(authService.signup(any())).willReturn(new UserResponse(1L, "user@example.com", "홍길동", Role.USER, null));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)

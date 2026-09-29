@@ -2,6 +2,7 @@ package com.example.board.service;
 
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import com.example.board.entity.Board;
 import com.example.board.entity.Comment;
 import com.example.board.entity.Role;
 import com.example.board.entity.User;
+import com.example.board.event.CommentCreatedEvent;
 import com.example.board.exception.BoardNotFoundException;
 import com.example.board.exception.CommentNotFoundException;
 import com.example.board.exception.ForbiddenOperationException;
@@ -33,6 +35,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final BoardRepository boardRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<CommentResponse> getList(Long boardId) {
         if (!boardRepository.existsById(boardId)) {
@@ -62,7 +65,12 @@ public class CommentService {
                 .user(user)
                 .content(request.content())
                 .build();
-        return commentRepository.save(comment).getId();
+        Long commentId = commentRepository.save(comment).getId();
+
+        eventPublisher.publishEvent(
+                new CommentCreatedEvent(commentId, boardId, board.getUser().getId(), userId));
+
+        return commentId;
     }
 
     @Transactional

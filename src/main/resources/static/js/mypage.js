@@ -1,10 +1,11 @@
 const ROLE_LABELS = { USER: "일반회원", ADMIN: "관리자" };
+const SMS_STATUS_LABELS = { SUCCESS: "발송 성공", FAILED: "발송 실패" };
 
 if (!isLoggedIn()) {
     window.location.href = "/auth/login.html";
 }
 
-const state = { boardsPage: 0, commentsPage: 0, likesPage: 0 };
+const state = { boardsPage: 0, commentsPage: 0, likesPage: 0, notificationsPage: 0 };
 
 async function loadProfile() {
     const response = await authFetch("/api/users/me");
@@ -15,7 +16,35 @@ async function loadProfile() {
     document.getElementById("mypage-profile").innerHTML = `
         <h1>마이페이지</h1>
         <p>${escapeHtml(user.name)} (${escapeHtml(user.email)}) · ${ROLE_LABELS[user.role] || user.role}</p>
+        <div class="phone-edit-form">
+            <label for="phone-input">댓글 알림을 받을 전화번호 (국가 코드 포함, 예: +821012345678)</label>
+            <div class="phone-edit-row">
+                <input type="text" id="phone-input" value="${escapeHtml(user.phoneNumber || "")}" placeholder="+821012345678">
+                <button type="button" id="phone-save-btn">저장</button>
+            </div>
+            <p class="error-message" id="phone-error"></p>
+        </div>
     `;
+    document.getElementById("phone-save-btn").addEventListener("click", savePhoneNumber);
+}
+
+async function savePhoneNumber() {
+    const phoneNumber = document.getElementById("phone-input").value.trim();
+    const errorMessage = document.getElementById("phone-error");
+    errorMessage.textContent = "";
+
+    const response = await authFetch("/api/users/me/phone", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phoneNumber }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        errorMessage.textContent = error?.message || "전화번호 저장에 실패했습니다.";
+        return;
+    }
+    errorMessage.textContent = "저장되었습니다.";
 }
 
 async function loadMyBoards() {
@@ -122,20 +151,60 @@ function renderMyLikes(rows) {
     `).join("");
 }
 
+async function loadMyNotifications() {
+    const response = await authFetch(`/api/users/me/notifications?page=${state.notificationsPage}&size=10`);
+    if (!response.ok) {
+        return;
+    }
+    const pageResponse = await response.json();
+    renderMyNotifications(pageResponse.content);
+    renderPagination(document.getElementById("my-notification-pagination"), pageResponse, (page) => {
+        state.notificationsPage = page;
+        loadMyNotifications();
+    });
+}
+
+function renderMyNotifications(rows) {
+    const tbody = document.getElementById("my-notification-list-body");
+    const emptyMessage = document.getElementById("my-notification-empty");
+
+    if (rows.length === 0) {
+        tbody.innerHTML = "";
+        emptyMessage.hidden = false;
+        return;
+    }
+    emptyMessage.hidden = true;
+
+    tbody.innerHTML = rows.map((notification) => `
+        <tr>
+            <td class="col-date">${formatDateTime(notification.createdAt)}</td>
+            <td class="col-title">
+                ${escapeHtml(notification.message)}
+                ${notification.errorMessage ? `<div class="sms-error-message">${escapeHtml(notification.errorMessage)}</div>` : ""}
+            </td>
+            <td class="col-category"><span class="sms-status sms-status-${notification.status}">${SMS_STATUS_LABELS[notification.status] || notification.status}</span></td>
+        </tr>
+    `).join("");
+}
+
 function switchTab(tab) {
     document.getElementById("tab-boards").classList.toggle("active", tab === "boards");
     document.getElementById("tab-comments").classList.toggle("active", tab === "comments");
     document.getElementById("tab-likes").classList.toggle("active", tab === "likes");
+    document.getElementById("tab-notifications").classList.toggle("active", tab === "notifications");
     document.getElementById("panel-boards").hidden = tab !== "boards";
     document.getElementById("panel-comments").hidden = tab !== "comments";
     document.getElementById("panel-likes").hidden = tab !== "likes";
+    document.getElementById("panel-notifications").hidden = tab !== "notifications";
 }
 
 document.getElementById("tab-boards").addEventListener("click", () => switchTab("boards"));
 document.getElementById("tab-comments").addEventListener("click", () => switchTab("comments"));
 document.getElementById("tab-likes").addEventListener("click", () => switchTab("likes"));
+document.getElementById("tab-notifications").addEventListener("click", () => switchTab("notifications"));
 
 loadProfile();
 loadMyBoards();
 loadMyComments();
 loadMyLikes();
+loadMyNotifications();

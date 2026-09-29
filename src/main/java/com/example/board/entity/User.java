@@ -46,6 +46,9 @@ public class User {
 
     private String providerId;
 
+    @Column(length = 20)
+    private String phoneNumber;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -82,6 +85,10 @@ public class User {
 
     public void changeRole(Role role) {
         this.role = role;
+    }
+
+    public void changePhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public boolean isOAuthUser() {

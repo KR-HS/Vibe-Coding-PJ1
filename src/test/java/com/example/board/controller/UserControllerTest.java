@@ -1,7 +1,9 @@
 package com.example.board.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 import java.util.List;
 
@@ -14,17 +16,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.example.board.dto.request.PhoneNumberUpdateRequest;
 import com.example.board.dto.response.BoardListItemResponse;
 import com.example.board.dto.response.MyCommentResponse;
 import com.example.board.dto.response.PageResponse;
+import com.example.board.dto.response.SmsNotificationLogResponse;
 import com.example.board.dto.response.UserResponse;
 import com.example.board.entity.BoardCategory;
 import com.example.board.entity.Provider;
 import com.example.board.entity.Role;
+import com.example.board.entity.SmsStatus;
 import com.example.board.entity.User;
 import com.example.board.security.CustomUserDetails;
 import com.example.board.service.BoardService;
 import com.example.board.service.CommentService;
+import com.example.board.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
@@ -33,13 +39,15 @@ class UserControllerTest {
     private BoardService boardService;
     @Mock
     private CommentService commentService;
+    @Mock
+    private UserService userService;
 
     private UserController userController;
     private CustomUserDetails userDetails;
 
     @BeforeEach
     void setUp() {
-        userController = new UserController(boardService, commentService);
+        userController = new UserController(boardService, commentService, userService);
 
         User user = User.builder()
                 .email("user@example.com")
@@ -91,6 +99,28 @@ class UserControllerTest {
         given(boardService.getLikedList(1L, 0, 10)).willReturn(PageResponse.of(List.of(item), 0, 10, 1L));
 
         ResponseEntity<PageResponse<BoardListItemResponse>> response = userController.myLikes(userDetails, 0, 10);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().content()).containsExactly(item);
+    }
+
+    @Test
+    void 내_전화번호를_등록할_수_있다() {
+        PhoneNumberUpdateRequest request = new PhoneNumberUpdateRequest("+821012345678");
+
+        ResponseEntity<Void> response = userController.updatePhone(userDetails, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        verify(userService).updatePhoneNumber(eq(1L), eq("+821012345678"));
+    }
+
+    @Test
+    void 내_SMS_발송_내역을_조회할_수_있다() {
+        SmsNotificationLogResponse item = new SmsNotificationLogResponse(1L, "[게시판] 회원님의 글에 새 댓글이 달렸습니다.",
+                SmsStatus.SUCCESS, null, null);
+        given(userService.getMyNotificationLogs(1L, 0, 10)).willReturn(PageResponse.of(List.of(item), 0, 10, 1L));
+
+        ResponseEntity<PageResponse<SmsNotificationLogResponse>> response = userController.myNotifications(userDetails, 0, 10);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().content()).containsExactly(item);
