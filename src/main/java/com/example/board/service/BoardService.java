@@ -1,6 +1,7 @@
 package com.example.board.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -27,6 +28,7 @@ import com.example.board.exception.ForbiddenOperationException;
 import com.example.board.mapper.BoardMapper;
 import com.example.board.repository.AttachmentRepository;
 import com.example.board.repository.BoardLikeRepository;
+import com.example.board.repository.BoardListCacheRepository;
 import com.example.board.repository.BoardRepository;
 import com.example.board.repository.CommentRepository;
 import com.example.board.repository.UserRepository;
@@ -43,14 +45,23 @@ public class BoardService {
     private final CommentRepository commentRepository;
     private final AttachmentRepository attachmentRepository;
     private final BoardLikeRepository boardLikeRepository;
+    private final BoardListCacheRepository boardListCacheRepository;
     private final BoardMapper boardMapper;
     private final FileStorageService fileStorageService;
 
     public PageResponse<BoardListItemResponse> getList(String keyword, BoardCategory category, int page, int size) {
+        Optional<PageResponse<BoardListItemResponse>> cached = boardListCacheRepository.find(keyword, category, page, size);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
+
         int offset = page * size;
         List<BoardListItemResponse> content = boardMapper.findList(keyword, category, null, null, offset, size);
         long totalElements = boardMapper.count(keyword, category, null, null);
-        return PageResponse.of(content, page, size, totalElements);
+        PageResponse<BoardListItemResponse> response = PageResponse.of(content, page, size, totalElements);
+
+        boardListCacheRepository.save(keyword, category, page, size, response);
+        return response;
     }
 
     public PageResponse<BoardListItemResponse> getMyList(Long userId, int page, int size) {
@@ -127,6 +138,7 @@ public class BoardService {
             }
         }
 
+        boardListCacheRepository.invalidate();
         return board.getId();
     }
 
@@ -137,6 +149,7 @@ public class BoardService {
             throw new ForbiddenOperationException("게시글 작성자만 수정할 수 있습니다.");
         }
         board.update(request.title(), request.content(), request.category());
+        boardListCacheRepository.invalidate();
     }
 
     @Transactional
@@ -153,6 +166,7 @@ public class BoardService {
         commentRepository.deleteByBoardId(boardId);
         boardLikeRepository.deleteByBoardId(boardId);
         boardRepository.delete(board);
+        boardListCacheRepository.invalidate();
     }
 
     public AttachmentDownload getAttachmentDownload(Long boardId, Long attachmentId) {

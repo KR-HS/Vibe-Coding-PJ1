@@ -194,4 +194,59 @@
 		</pluginRepository>
 	</pluginRepositories>
 
+	<!--
+		JMeter load testing (006-board-list-cache.md). Only runs when explicitly activated
+		with "-Pperf-test" (e.g. mvn verify -Pperf-test) so it never affects normal
+		mvn test/install/verify runs. The app must already be running locally before this
+		profile is invoked; see docs/perf/006-jmeter-guide.md.
+	-->
+	<profiles>
+		<profile>
+			<id>perf-test</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.lazerycode.jmeter</groupId>
+						<artifactId>jmeter-maven-plugin</artifactId>
+						<version>3.8.0</version>
+						<executions>
+							<execution>
+								<id>configuration</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>configure</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>jmeter-tests</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>jmeter</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<generateReports>true</generateReports>
+							<testResultsTimestamp>false</testResultsTimestamp>
+							<propertiesUser>
+								<host>${jmeter.host}</host>
+								<port>${jmeter.port}</port>
+								<threads>${jmeter.threads}</threads>
+								<loops>${jmeter.loops}</loops>
+								<rampup>${jmeter.rampup}</rampup>
+							</propertiesUser>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+			<properties>
+				<jmeter.host>localhost</jmeter.host>
+				<jmeter.port>8081</jmeter.port>
+				<jmeter.threads>20</jmeter.threads>
+				<jmeter.loops>50</jmeter.loops>
+				<jmeter.rampup>5</jmeter.rampup>
+			</properties>
+		</profile>
+	</profiles>
+
 </project>

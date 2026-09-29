@@ -3,7 +3,9 @@ package com.example.board.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -35,6 +37,7 @@ import com.example.board.exception.ForbiddenOperationException;
 import com.example.board.mapper.BoardMapper;
 import com.example.board.repository.AttachmentRepository;
 import com.example.board.repository.BoardLikeRepository;
+import com.example.board.repository.BoardListCacheRepository;
 import com.example.board.repository.BoardRepository;
 import com.example.board.repository.CommentRepository;
 import com.example.board.repository.UserRepository;
@@ -52,6 +55,8 @@ class BoardServiceTest {
     private AttachmentRepository attachmentRepository;
     @Mock
     private BoardLikeRepository boardLikeRepository;
+    @Mock
+    private BoardListCacheRepository boardListCacheRepository;
     @Mock
     private BoardMapper boardMapper;
     @Mock
@@ -97,6 +102,35 @@ class BoardServiceTest {
 
         assertThat(boardId).isEqualTo(10L);
         verify(attachmentRepository, never()).save(any());
+        verify(boardListCacheRepository).invalidate();
+    }
+
+    @Test
+    void 게시글_목록_캐시가_있으면_DB를_조회하지_않는다() {
+        BoardListItemResponse item = new BoardListItemResponse(
+                10L, "제목", BoardCategory.FREE, "작성자", 0, 0L, 0L, null);
+        PageResponse<BoardListItemResponse> cached = PageResponse.of(List.of(item), 0, 10, 1L);
+        given(boardListCacheRepository.find(null, null, 0, 10)).willReturn(Optional.of(cached));
+
+        PageResponse<BoardListItemResponse> response = boardService.getList(null, null, 0, 10);
+
+        assertThat(response).isEqualTo(cached);
+        verify(boardMapper, never()).findList(any(), any(), any(), any(), anyInt(), anyInt());
+        verify(boardListCacheRepository, never()).save(any(), any(), anyInt(), anyInt(), any());
+    }
+
+    @Test
+    void 게시글_목록_캐시가_없으면_DB_조회_후_캐시에_저장한다() {
+        BoardListItemResponse item = new BoardListItemResponse(
+                10L, "제목", BoardCategory.FREE, "작성자", 0, 0L, 0L, null);
+        given(boardListCacheRepository.find(null, null, 0, 10)).willReturn(Optional.empty());
+        given(boardMapper.findList(null, null, null, null, 0, 10)).willReturn(List.of(item));
+        given(boardMapper.count(null, null, null, null)).willReturn(1L);
+
+        PageResponse<BoardListItemResponse> response = boardService.getList(null, null, 0, 10);
+
+        assertThat(response.content()).containsExactly(item);
+        verify(boardListCacheRepository).save(eq(null), eq(null), eq(0), eq(10), any());
     }
 
     @Test
@@ -191,6 +225,7 @@ class BoardServiceTest {
 
         assertThat(board.getTitle()).isEqualTo("수정 제목");
         assertThat(board.getCategory()).isEqualTo(BoardCategory.QNA);
+        verify(boardListCacheRepository).invalidate();
     }
 
     @Test
@@ -212,6 +247,7 @@ class BoardServiceTest {
         verify(commentRepository).deleteByBoardId(10L);
         verify(boardLikeRepository).deleteByBoardId(10L);
         verify(boardRepository).delete(board);
+        verify(boardListCacheRepository).invalidate();
     }
 
     @Test

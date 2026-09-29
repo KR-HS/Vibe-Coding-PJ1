@@ -24,6 +24,16 @@ services:
     volumes:
       - board-redis-data:/data
 
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: board-redisinsight
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5540:5540"
+    volumes:
+      - board-redisinsight-data:/data
+
 volumes:
   board-mysql-data:
   board-redis-data:
+  board-redisinsight-data:
