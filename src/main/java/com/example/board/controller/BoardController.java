@@ -33,9 +33,12 @@ import com.example.board.entity.BoardCategory;
 import com.example.board.security.CustomUserDetails;
 import com.example.board.service.BoardService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "게시글")
 @RestController
 @RequestMapping("/api/boards")
 @RequiredArgsConstructor
@@ -43,6 +46,7 @@ public class BoardController {
 
     private final BoardService boardService;
 
+    @Operation(summary = "게시글 목록 조회 (검색/카테고리 필터/페이징)")
     @GetMapping
     public ResponseEntity<PageResponse<BoardListItemResponse>> getList(
             @RequestParam(defaultValue = "0") int page,
@@ -52,6 +56,7 @@ public class BoardController {
         return ResponseEntity.ok(boardService.getList(keyword, category, page, size));
     }
 
+    @Operation(summary = "게시글 상세 조회")
     @GetMapping("/{id}")
     public ResponseEntity<BoardDetailResponse> getDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -60,6 +65,7 @@ public class BoardController {
         return ResponseEntity.ok(boardService.getDetail(id, userId));
     }
 
+    @Operation(summary = "게시글 좋아요")
     @PostMapping("/{id}/likes")
     public ResponseEntity<LikeResponse> like(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -67,6 +73,7 @@ public class BoardController {
         return ResponseEntity.ok(boardService.like(userDetails.getId(), id));
     }
 
+    @Operation(summary = "게시글 좋아요 취소")
     @DeleteMapping("/{id}/likes")
     public ResponseEntity<LikeResponse> unlike(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -74,6 +81,7 @@ public class BoardController {
         return ResponseEntity.ok(boardService.unlike(userDetails.getId(), id));
     }
 
+    @Operation(summary = "게시글 작성 (첨부파일 포함 가능)")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -85,6 +93,7 @@ public class BoardController {
                 .build();
     }
 
+    @Operation(summary = "게시글 수정")
     @PutMapping("/{id}")
     public ResponseEntity<Void> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -94,6 +103,7 @@ public class BoardController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "게시글 삭제")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -102,6 +112,7 @@ public class BoardController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "첨부파일 다운로드")
     @GetMapping("/{boardId}/attachments/{attachmentId}")
     public ResponseEntity<Resource> downloadAttachment(
             @PathVariable Long boardId,
@@ -118,6 +129,7 @@ public class BoardController {
                 .body(download.resource());
     }
 
+    @Operation(summary = "첨부파일 삭제")
     @DeleteMapping("/{boardId}/attachments/{attachmentId}")
     public ResponseEntity<Void> deleteAttachment(
             @AuthenticationPrincipal CustomUserDetails userDetails,

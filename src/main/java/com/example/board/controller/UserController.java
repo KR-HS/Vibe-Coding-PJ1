@@ -20,9 +20,12 @@ import com.example.board.service.BoardService;
 import com.example.board.service.CommentService;
 import com.example.board.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "회원(마이페이지)")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -32,11 +35,13 @@ public class UserController {
     private final CommentService commentService;
     private final UserService userService;
 
+    @Operation(summary = "내 정보 조회")
     @GetMapping("/me")
     public ResponseEntity<UserResponse> me(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(UserResponse.from(userDetails.getUser()));
     }
 
+    @Operation(summary = "내가 쓴 게시글 목록 조회")
     @GetMapping("/me/boards")
     public ResponseEntity<PageResponse<BoardListItemResponse>> myBoards(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -45,6 +50,7 @@ public class UserController {
         return ResponseEntity.ok(boardService.getMyList(userDetails.getId(), page, size));
     }
 
+    @Operation(summary = "내가 쓴 댓글 목록 조회")
     @GetMapping("/me/comments")
     public ResponseEntity<PageResponse<MyCommentResponse>> myComments(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -53,6 +59,7 @@ public class UserController {
         return ResponseEntity.ok(commentService.getMyList(userDetails.getId(), page, size));
     }
 
+    @Operation(summary = "좋아요한 게시글 목록 조회")
     @GetMapping("/me/likes")
     public ResponseEntity<PageResponse<BoardListItemResponse>> myLikes(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -61,6 +68,7 @@ public class UserController {
         return ResponseEntity.ok(boardService.getLikedList(userDetails.getId(), page, size));
     }
 
+    @Operation(summary = "SMS 알림 수신용 전화번호 등록/수정")
     @PatchMapping("/me/phone")
     public ResponseEntity<Void> updatePhone(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -69,6 +77,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "내 SMS 알림 발송 내역 조회")
     @GetMapping("/me/notifications")
     public ResponseEntity<PageResponse<SmsNotificationLogResponse>> myNotifications(
             @AuthenticationPrincipal CustomUserDetails userDetails,

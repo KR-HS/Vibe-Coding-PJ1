@@ -31,7 +31,8 @@ public class SecurityConfig {
 
     private static final String[] PERMIT_ALL_PATHS = {
             "/", "/index.html", "/auth/**", "/board/**", "/mypage.html", "/admin/**", "/css/**", "/js/**",
-            "/error", "/api/auth/**", "/oauth2/**", "/login/**"
+            "/error", "/api/auth/**", "/oauth2/**", "/login/**",
+            "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**"
     };
 
     private final JwtTokenProvider jwtTokenProvider;

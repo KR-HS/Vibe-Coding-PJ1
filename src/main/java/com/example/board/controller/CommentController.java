@@ -20,20 +20,25 @@ import com.example.board.dto.response.CommentResponse;
 import com.example.board.security.CustomUserDetails;
 import com.example.board.service.CommentService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "댓글")
 @RestController
 @RequiredArgsConstructor
 public class CommentController {
 
     private final CommentService commentService;
 
+    @Operation(summary = "댓글 목록 조회")
     @GetMapping("/api/boards/{boardId}/comments")
     public ResponseEntity<List<CommentResponse>> getList(@PathVariable Long boardId) {
         return ResponseEntity.ok(commentService.getList(boardId));
     }
 
+    @Operation(summary = "댓글 작성")
     @PostMapping("/api/boards/{boardId}/comments")
     public ResponseEntity<Void> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -45,6 +50,7 @@ public class CommentController {
                 .build();
     }
 
+    @Operation(summary = "댓글 수정")
     @PutMapping("/api/comments/{id}")
     public ResponseEntity<Void> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -54,6 +60,7 @@ public class CommentController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "댓글 삭제")
     @DeleteMapping("/api/comments/{id}")
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal CustomUserDetails userDetails,
